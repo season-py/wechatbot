@@ -1,17 +1,17 @@
+#!/usr/bin/env python
 # coding=utf-8
 # author=haishan09@gmail.com
-import gtk
-import time
-import pygtk
-import requests
-from urls import UUID_URI, QRCODE_URI
 
-pygtk.require('2.0')
+import time
+import requests
+from wechatbot.core.urls import UUID_URI, QRCODE_URI
+from wechatbot.core.qrcode import QrCode
+
 
 class WeChatApi(object):
 
     def __init__(self):
-        pass
+        self.qrcode = QrCode()
 
     def get_uuid(self):
         ts = int(time.time() * 1000)
@@ -27,21 +27,7 @@ class WeChatApi(object):
 
     def show_qrcode(self, uuid):
         data = self.get_qrcode(uuid)
-        win = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        win.connect("destroy", lambda _: gtk.main_quit())
-        img = gtk.Image()
-        loader = gtk.gdk.PixbufLoader()
-        loader.set_size(430, 430)
-        loader.write(data)
-        loader.close()
-        img.set_from_pixbuf(loader.get_pixbuf())
-        win.add(img)
-        img.show()
-        win.show()
-        gtk.main()
-
-
-
+        self.qrcode.show_image(data)
 
 
 if __name__ == '__main__':
