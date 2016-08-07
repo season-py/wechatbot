@@ -24,3 +24,5 @@ class QrCodeHandler(BaseHandler):
         self.set_header("Content-type",  "image/jpeg")
         self.write(response.body)
         login_url = LOGIN_URI.format(**{'timestamp': self.get_timestamp(), 'uuid': uuid})
+        self.flush()
+        self.finish()

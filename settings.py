@@ -15,5 +15,6 @@ SETTINGS = {
     'template_path': os.path.join(WORKSPACE, 'templates'),
     'static_path': os.path.join(WORKSPACE, 'static'),
     'media_path': os.path.join(WORKSPACE, 'media'),
+    'sqlite_file': os.path.join(WORKSPACE, 'db/wechatbot.sqlite'),
 }
 

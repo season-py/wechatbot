@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # coding=utf-8
 # author=haishan09@gmail.com
+import uuid
 import time
+import logging
 from tornado import web
 
+logger = logging.getLogger('RequestHandler')
 
 class AccessDeny(Exception):
     pass
@@ -32,6 +35,15 @@ class BaseHandler(web.RequestHandler):
 
     def prepare(self):
         self.context = Context()
+        if not self.get_uuid():
+            self.set_uuid()
 
-    def get_current_user(self):
-        return self.get_secure_cookie('user')
+    def set_uuid(self):
+        _uuid = str(uuid.uuid1())
+        logger.debug('设置用户uuid: {0}'.format(_uuid))
+        self.set_secure_cookie('uuid', _uuid)
+
+    def get_uuid(self):
+        return self.get_secure_cookie('uuid')
+
+
