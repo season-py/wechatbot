@@ -3,4 +3,4 @@ UUID_URI = 'https://login.wx.qq.com/jslogin?appid=wx782c26e4c19acffb&redirect_ur
 
 QRCODE_URI = 'https://login.weixin.qq.com/qrcode/{uuid}'
 
-LOGIN_URI = 'https://login.wx.qq.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid={uuid}&tip=0&_={timestamp}'
+CHECK_LOGIN_URI = 'https://login.wx.qq.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid={uuid}&tip=0&_={timestamp}'

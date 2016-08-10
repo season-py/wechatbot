@@ -8,6 +8,8 @@ from tornado.httpclient import AsyncHTTPClient
 from handlers.base import BaseHandler
 from utils.urlmap import urlmap
 from core.urls import UUID_URI
+from models import User
+from pony.orm import db_session
 
 
 @urlmap(url=r'/login')
@@ -22,15 +24,17 @@ class LoginHandler(BaseHandler):
         yield cli.fetch(url, self.callback)
 
     def callback(self, response):
-        msg = {'code': 1, 'uuid': ''}
-        stat = dict(
-            map(lambda kv: kv.split(' = '), 
-                response.body.strip(';').split('; '))
-            )
+        msg = {'code': 1, 'wechat_uuid': ''}
+        stat = self.extract(response.body)
         if stat.get('window.QRLogin.code') == '200':
-            uuid = stat.get('window.QRLogin.uuid').strip('"')
+            wechat_uuid = stat.get('window.QRLogin.uuid')
             msg['code'] = 0
-            msg['uuid'] = uuid
+            msg['wechat_uuid'] = wechat_uuid
+            with db_session:
+                user = User.get(uuid=self.current_user)
+                if not user:
+                    user = User(uuid=self.current_user, is_valid=1)
+                user.wechat_uuid = wechat_uuid 
         self.write(json.dumps(msg))
         self.finish()
 
