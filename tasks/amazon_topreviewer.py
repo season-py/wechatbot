@@ -9,10 +9,10 @@ import urlparse
 from BeautifulSoup import BeautifulSoup
 from tornado import httpclient, gen, ioloop, queues
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(message)s')
-concurrency = 1
-domain = 'https://www.amazon.com'
-start_url = 'https://www.amazon.com/review/top-reviewers'
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
+concurrency = 2 
+domain = 'https://www.amazon.de'
+start_url = 'https://www.amazon.de/review/top-reviewers'
 headers = {
     'User-Agent': 'Mozilla/5.0（iPad; U; CPU OS 3_2_1 like Mac OS X; en-us）AppleWebKit/531.21.10（KHTML, like Gecko）Mobile/7B405'
 }
