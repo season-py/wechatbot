@@ -9,32 +9,28 @@ import urlparse
 from BeautifulSoup import BeautifulSoup
 from tornado import httpclient, gen, ioloop, queues
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(message)s')
-concurrency = 2 
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(message)s')
+concurrency = 3 
 domain = 'https://www.amazon.de'
 start_url = 'https://www.amazon.de/review/top-reviewers'
 headers = {
-    'User-Agent': 'Mozilla/5.0（iPad; U; CPU OS 3_2_1 like Mac OS X; en-us）AppleWebKit/531.21.10（KHTML, like Gecko）Mobile/7B405'
+    'User-Agent': 'Mozilla/6.0（iPad; U; CPU OS 3_2_1 like Mac OS X; en-us）AppleWebKit/531.21.10（KHTML, like Gecko）Mobile/7B405'
 }
 
 @gen.coroutine
 def get_reviewers(url_type, url):
     urls = []
     req = httpclient.HTTPRequest(url=url, method='GET', headers=headers)
-    try:
-        response = yield httpclient.AsyncHTTPClient().fetch(req)
-    except Exception, e:
-        logging.error('error: {0}, {1}'.format(e.message, url))
-    else:
-        html = response.body if isinstance(response.body, str) else response.body.decode()
-        soup = BeautifulSoup(html)
-        paging_span = soup.find('span', {'class': 'paging'})
-        if paging_span:
-            for a in paging_span.findAll('a'):
-                urls.append((0, a.get('href')))
-        reviewer_trs = soup.findAll('tr', id=re.compile('reviewer*'))
-        for tr in reviewer_trs:
-            urls.append((1, domain + tr.findAll('td')[1].a.get('href')))
+    response = yield httpclient.AsyncHTTPClient().fetch(req)
+    html = response.body if isinstance(response.body, str) else response.body.decode()
+    soup = BeautifulSoup(html)
+    paging_span = soup.find('span', {'class': 'paging'})
+    if paging_span:
+        for a in paging_span.findAll('a'):
+            urls.append((0, a.get('href')))
+    reviewer_trs = soup.findAll('tr', id=re.compile('reviewer*'))
+    for tr in reviewer_trs:
+        urls.append((1, domain + tr.findAll('td')[1].a.get('href')))
     raise gen.Return(urls)
 
 fd = open('./amazon_topreviewers.csv', 'ab')
@@ -43,26 +39,24 @@ fd = open('./amazon_topreviewers.csv', 'ab')
 def get_contact(url):
     rank, name, contact = '', '', ''
     req = httpclient.HTTPRequest(url=url, method='GET', headers=headers)
-    try:
-        response = yield httpclient.AsyncHTTPClient().fetch(req)
-    except Exception, e:
-        logging.error('error: {0}, {1}'.format(e.message, url))
-    else:
-        logging.debug('fetched {0}'.format(url))
-        html = response.body if isinstance(response.body, str) else response.body.decode()
-        soup = BeautifulSoup(html)
-        rank_node = soup.find('a', {'class': 'a-link-normal top-reviewer-link a-color-base'})
-        name_node = soup.find('span', {'class': 'public-name-text'})
-        contact_node = soup.find(rel='nofollow')
-        if name_node:
-            name = name_node.text
-        if rank_node:
-            rank = rank_node.div.span.text
-        if contact_node:
-            contact = contact_node.text
-        line = ', '.join(map(lambda x: x.encode('utf-8'), [rank, name, contact]))
-        fd.write(line + '\n')
-        fd.flush()
+    response = yield httpclient.AsyncHTTPClient().fetch(req)
+    logging.debug('fetched {0}'.format(url))
+    html = response.body if isinstance(response.body, str) else response.body.decode()
+    soup = BeautifulSoup(html)
+    rank_node = soup.find('a', {'class': 'a-link-normal top-reviewer-link a-color-base'})
+    name_node = soup.find('span', {'class': 'public-name-text'})
+    contact_node = soup.find(rel='nofollow')
+    if name_node:
+        name = name_node.text
+    if rank_node:
+        rank = rank_node.div.span.text.replace('#', '').replace('.', '')
+    if contact_node:
+        contact = contact_node.text
+    if not name:
+        raise
+    line = ' ### '.join(map(lambda x: x.encode('utf-8'), [rank, name, contact]))
+    fd.write(line + '\n')
+    fd.flush()
 
 def get_page(url):
     page = urlparse.parse_qs(url).get('page')
@@ -102,6 +96,8 @@ def main():
                 fetched.add(current_url)
         except Exception, e:
             logging.error('error: {0}, {1}'.format(e.message, current_url))
+            q.put((current_url_type, current_url))
+            fetching.remove(current_url)
         finally:
             q.task_done()
 
