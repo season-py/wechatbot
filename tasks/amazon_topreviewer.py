@@ -37,9 +37,11 @@ def get_reviewers(url_type, url):
             urls.append((1, domain + tr.findAll('td')[1].a.get('href')))
     raise gen.Return(urls)
 
+fd = open('./amazon_topreviewers.csv', 'ab')
+
 @gen.coroutine
 def get_contact(url):
-    rank, name, contact = 0, None, None
+    rank, name, contact = '', '', ''
     req = httpclient.HTTPRequest(url=url, method='GET', headers=headers)
     try:
         response = yield httpclient.AsyncHTTPClient().fetch(req)
@@ -58,8 +60,9 @@ def get_contact(url):
             rank = rank_node.div.span.text
         if contact_node:
             contact = contact_node.text
-            if '@' in contact:
-                logging.info((rank, name, contact))
+        line = ', '.join(map(lambda x: x.encode('utf-8'), [rank, name, contact]))
+        fd.write(line + '\n')
+        fd.flush()
 
 def get_page(url):
     page = urlparse.parse_qs(url).get('page')
