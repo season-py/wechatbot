@@ -3,6 +3,7 @@
 *.tags*
 *.log*
 *.out*
+*.csv*
 search/whoosh_indexes/*
 */migrations/*
 utils/phantomjs-2.1.1-linux-x86_64/*
